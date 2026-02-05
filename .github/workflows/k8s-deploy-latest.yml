@@ -7,7 +7,7 @@ name: k8s-deploy-latest
 
 env:
   K8S_NAMESPACE: 'folio-dev-new'
-  K8S_DEPLOYMENT: 'mod-eusage-report-dev'
+  K8S_DEPLOYMENT: 'mod-eusage-reports-dev'
 
 on:
   workflow_dispatch
