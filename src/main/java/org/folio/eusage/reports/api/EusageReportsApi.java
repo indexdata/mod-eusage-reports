@@ -84,6 +84,7 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
   static String deduplicatedAgreementsView(TenantPgPool pool) {
     return pool.getSchema() + ".unique_agreement_entries_with_aggregated_invoices";
   }
+
   static String statusTable(TenantPgPool pool) {
     return pool.getSchema() + ".status";
   }
