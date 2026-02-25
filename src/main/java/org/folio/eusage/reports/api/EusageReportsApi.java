@@ -81,6 +81,9 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
     return pool.getSchema() + ".agreement_entries";
   }
 
+  static String deduplicatedAgreementsView(TenantPgPool pool) {
+    return pool.getSchema() + ".unique_agreement_entries_with_aggregated_invoices";
+  }
   static String statusTable(TenantPgPool pool) {
     return pool.getSchema() + ".status";
   }
@@ -1240,7 +1243,7 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
     result.put("fiscalYear", fiscalYears);
     result.put("invoicedPeriods", invoicedPeriods);
     JsonArray invoiceNumbers = new JsonArray();
-    result.put("invoiceNumber", invoiceNumbers);
+    result.put("invoiceNumbers", invoiceNumbers);
     UUID poLineId = UUID.fromString(poLine.getString("poLineId"));
     return lookupOrderLine(poLineId, ctx).compose(orderLine -> {
       result.put("poLineNumber", orderLine.getString("poLineNumber"));
@@ -1382,7 +1385,7 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
     JsonArray fiscalYears = poResult.getJsonArray("fiscalYear");
     JsonArray subscriptionPeriods = poResult.getJsonArray("subscriptionPeriods");
     JsonArray invoicedPeriods = poResult.getJsonArray("invoicedPeriods");
-    JsonArray invoiceNumbers = poResult.getJsonArray("invoiceNumber");
+    JsonArray invoiceNumbers = poResult.getJsonArray("invoiceNumbers");
     if (subscriptionPeriods.isEmpty()) {
       return insertAgreementLine(pool, con, agreementId, agreementLineId,
           coverageDateRanges, type, kbTitleId, kbPackageId, poLineId, poResult,
@@ -1730,10 +1733,10 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
         + " kbPackageId, kbPackageName, printISSN, onlineISSN, ISBN,"
         + " NULL AS publicationDate, NULL AS usageDateRange,"
         + " NULL AS uniqueAccessCount, NULL AS totalAccessCount, TRUE AS openAccess,"
-        + " orderType, poLineNumber, invoiceNumber,"
+        + " orderType, poLineNumber, invoiceNumbers,"
         + " fiscalYearRange, subscriptionDateRange,"
         + " encumberedCost, invoicedCost"
-        + " FROM " + agreementEntriesTable(pool)
+        + " FROM " + deduplicatedAgreementsView(pool) + " AS agreement_entries"
         + " LEFT JOIN " + packageEntriesTable(pool) + " USING (kbPackageId)"
         + " JOIN " + titleEntriesTable(pool) + " ON"
         + " title_entries.kbTitleId = agreement_entries.kbTitleId OR"
@@ -1745,10 +1748,10 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
         + " title_entries.kbTitleId AS kbId, kbTitleName AS title,"
         + " kbPackageId, kbPackageName, printISSN, onlineISSN, ISBN,"
         + " publicationDate, usageDateRange, uniqueAccessCount, totalAccessCount, openAccess,"
-        + " orderType, poLineNumber, invoiceNumber,"
+        + " orderType, poLineNumber, invoiceNumbers,"
         + " fiscalYearRange, subscriptionDateRange,"
         + " encumberedCost, invoicedCost"
-        + " FROM " + agreementEntriesTable(pool)
+        + " FROM " + deduplicatedAgreementsView(pool) + " AS agreement_entries "
         + " LEFT JOIN " + packageEntriesTable(pool) + " USING (kbPackageId)"
         + " JOIN " + titleEntriesTable(pool) + " ON"
         + " title_entries.kbTitleId = agreement_entries.kbTitleId OR"
@@ -1956,6 +1959,46 @@ public class EusageReportsApi implements RouterCreator, TenantInitHooks {
             + "id UUID PRIMARY KEY, "
             + "status json"
             + ")",
+        "DROP VIEW IF EXISTS " + deduplicatedAgreementsView(pool),
+        "CREATE VIEW " + deduplicatedAgreementsView(pool) + " AS\n"
+            + "SELECT kbtitleid,\n"
+            + "       kbpackageid,\n"
+            + "       type,\n"
+            + "       agreementid,\n"
+            + "       agreementlineid,\n"
+            + "       coveragedateranges,\n"
+            + "       ordertype,\n"
+            + "       date_part('year', lower(subscriptiondaterange)) AS year,\n"
+            + "       TRANSLATE(CAST(range_agg(subscriptiondaterange) AS TEXT),'{}','') "
+            + "                                                       AS subscriptiondaterange,\n"
+            + "       TRANSLATE(CAST(range_agg(fiscalyearrange) AS TEXT),'{}','') "
+            + "                                                       AS fiscalyearrange,\n"
+            + "       string_agg(polinenumber, ';') AS poLineNumber,\n"
+            + "       string_agg(invoicenumber, ';') AS invoicenumbers,\n"
+            + "       sum(invoicedcost) AS invoicedcost,\n"
+            + "       sum(encumberedcost) AS encumberedcost\n"
+            + "FROM (SELECT DISTINCT kbtitleid,\n"
+            + "                kbpackageid,\n"
+            + "                type,\n"
+            + "                agreementid,\n"
+            + "                agreementlineid,\n"
+            + "                fiscalyearrange,\n"
+            + "                subscriptiondaterange,\n"
+            + "                coveragedateranges,\n"
+            + "                ordertype,\n"
+            + "                polinenumber,\n"
+            + "                invoicenumber,\n"
+            + "                invoicedcost,\n"
+            + "                encumberedcost\n"
+            + "      FROM " + agreementEntriesTable(pool) + ")\n"
+            + "GROUP BY kbtitleid,\n"
+            + "         kbpackageid,\n"
+            + "         type,\n"
+            + "         agreementid,\n"
+            + "         agreementlineid,\n"
+            + "         year,\n"
+            + "         coveragedateranges,\n"
+            + "         ordertype",
         "CREATE OR REPLACE FUNCTION " + pool.getSchema() + ".floor_months(date, integer)"
             + " RETURNS date AS $$\n"
             + "-- floor_months(date, n) returns the start of the period date belongs to,\n"
