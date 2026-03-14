@@ -1359,7 +1359,7 @@ assertThat(json.getJsonArray("items").size(), is(4));
           assertThat(items.getJsonObject(3).getDouble("costPerUniqueRequest"), is(1.85));
         }));
   }
-
+  
   @Test
   public void costPerUseAccessCountPeriod1Y(TestContext context) {
     RoutingContext routingContext = mock(RoutingContext.class, RETURNS_DEEP_STUBS);
@@ -1418,7 +1418,7 @@ assertThat(json.getJsonArray("items").size(), is(4));
           assertThat(json.getJsonArray("items").getJsonObject(4).getDouble("costPerUniqueRequest"), is(0.92));
         }));
   }
-
+  
   @Test
   public void costPerUseAccessCountPeriod5Y(TestContext context) {
     RoutingContext routingContext = mock(RoutingContext.class, RETURNS_DEEP_STUBS);
@@ -1578,7 +1578,7 @@ assertThat(json.getJsonArray("items").size(), is(4));
           }
         }));
   }
-
+  
   @Test
   public void costPerUseFormatBookCsv(TestContext context) {
     RoutingContext routingContext = mock(RoutingContext.class, RETURNS_DEEP_STUBS);
