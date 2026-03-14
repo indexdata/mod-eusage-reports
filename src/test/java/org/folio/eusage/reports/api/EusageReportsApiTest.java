@@ -872,7 +872,7 @@ assertThat(json.getJsonArray("items").size(), is(4));
           ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
           verify(routingContext.response()).end(body.capture());
           JsonObject json = new JsonObject(body.getValue());
-          assertThat(json.getJsonArray("items").size(), is(4));
+          assertThat(json.getJsonArray("items").size(), is(6));
         }));
   }
 
