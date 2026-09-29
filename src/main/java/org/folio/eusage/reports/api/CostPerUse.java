@@ -60,7 +60,9 @@ public final class CostPerUse {
       String poLineNumber = row.getString("polinenumber");
       String payKey = kbId + "," + poLineNumber + "," + fiscalYearRange
           + "," + subscriptionDateRange;
-      LocalDate publicationDate = row.getLocalDate("publicationdate");
+
+      LocalDate publicationDate = row.getLocalDate("publicationdate") == null
+          ? LocalDate.of(1,1,1) : row.getLocalDate("publicationdate");
       String pubPeriodLabel = Periods.periodLabelFloor(publicationDate, 12,"nopub");
       if (titlesInSubscription.containsKey(payKey) && "nopub".equals(pubPeriodLabel)) {
         return;
@@ -88,7 +90,8 @@ public final class CostPerUse {
       if (subscriptionPeriod == null) {
         return;
       }
-      LocalDate publicationDate = row.getLocalDate("publicationdate");
+      LocalDate publicationDate = row.getLocalDate("publicationdate") == null
+          ? LocalDate.of(1,1,1) : row.getLocalDate("publicationdate");
       String pubPeriodLabel = Periods.periodLabelFloor(publicationDate, 12,"nopub");
       String poLineNumber = row.getString("polinenumber");
       UUID kbId = row.getUUID("kbid");
@@ -131,7 +134,7 @@ public final class CostPerUse {
         item = new JsonObject();
         totalItems.put(itemKey, item);
         items.add(item);
-        item.put("kbId", kbId)
+        item.put("kbId", kbId.toString())
             .put("title", row.getString("title"))
             .put("derivedTitle", kbPackageId != null);
         String printIssn = row.getString("printissn");
@@ -155,9 +158,9 @@ public final class CostPerUse {
         item.put("poLineIDs", poLineIDs);
 
         JsonArray invoiceNumbers = new JsonArray();
-        String invoiceNumber = row.getString("invoicenumber");
-        if (invoiceNumber != null) {
-          invoiceNumbers.add(invoiceNumber);
+        String invoicenumbers = row.getString("invoicenumbers");
+        if (invoicenumbers != null) {
+          invoiceNumbers.add(invoicenumbers);
         }
         item.put("invoiceNumbers", invoiceNumbers);
         if (usageDateRange != null) {

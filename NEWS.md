@@ -1,3 +1,12 @@
+## 3.1.0 2026-04-16
+* [MODEUR-162](https://issues.folio.org/browse/MODEUR-162) Uses Java 21
+* [MODEUR-164](https://issues.folio.org/browse/MODEUR-164) Uses Vert.x 5, vertx lib 4, okapi 7
+* [MODORDSTOR-448](https://issues.folio.org/browse/MODORDSTOR-448) Requires `order-lines` `3.0 4.0`
+* [MODEUR-165](https://issues.folio.org/browse/MODEUR-165) Supports counter-reports interface version 5.0
+* [MODEUR-178](https://issues.folio.org/browse/MODEUR-178) Includes statistics for titles with no year of publication
+* [MODEUR-175](https://issues.folio.org/browse/MODEUR-175) Fixes multiplication of usage counts by number of invoices
+* [MODEUR-176](https://issues.folio.org/browse/MODEUR-176) Excludes cancelled invoices from subscription costs
+
 ## 3.0.0 2024-10-31
 * [APPDESCRIP-28](https://folio-org.atlassian.net/browse/APPDESCRIP-28) Update erm-usage/files interface id to be valid for Eureka platform
 * [MODEUR-157](https://folio-org.atlassian.net/browse/MODEUR-157) Support finance-storage.transactions 5.0
